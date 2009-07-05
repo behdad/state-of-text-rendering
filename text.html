@@ -121,7 +121,7 @@ rendered glyph shapes in the X server and showing them on the screen.
 Glyphs are rendered by the client (ie. application) and uploaded to the X
 server which will then hash and only keep one copy of each image, but each
 client has to go through the render+upload phase regardless.  There are
-various higher-leve wrappers around the text-rendering functionality of X
+various higher-level wrappers around the text-rendering functionality of X
 render: the old and semi-obsolete one being Xft.  These days however, cairo
 does that job for the GNOME stack and Qt does it for KDE.
 
@@ -170,7 +170,7 @@ Around 2006 Pango and Qt developers cooperated to reunify the layout
 engine again, and HarfBuzz was born as a freedesktop.org project.
 Initially it was just merging back the existing code and renaming it, but
 after various meetings, the plan to make HarfBuzz be a unified shaping engine
-was born and have been the goal since.  HarfBuzz was relicensed (thans to
+was born and have been the goal since.  HarfBuzz was relicensed (thanks to
 FreeType developers) to the old MIT license to rid it of the FTL advertisement
 clause.
 </p>
@@ -338,7 +338,7 @@ decent internationalized batch document processor has pretty much been
 nonexistent.  The reason historically has been that shaping engines were
 always developed in the context of GUI frameworks, and batch processors
 typically do not rely on one, and hence are designed without the i18n models
-present in all modens GUIs in mind.
+present in all moderns GUIs in mind.
 XMLFO / Docbook processors, etc fit in this category and should use HarfBuzz
 and the rest of the stack for full complex text support.
 </p></li>
@@ -496,7 +496,7 @@ directories and uses glib/gio to monitor them for changes,</li>
 application using the XSETTINGS framework,</li>
 <li>GTK+ catches the notification and asks Pango to drop all its caches,</li>
 <li>GTK+ sends the application a "theme-changed" signal such that the
-application windows are redrawned, using the new font database.</li>
+application windows are redrawn, using the new font database.</li>
 </ol>
 </p></li>
 
@@ -513,13 +513,13 @@ FcPatternFormat() to build a list of "Provides" tags for the list.
 For example, the Deja Vu Sans font will
 "provide" the tags "font(:lang=en)" as well as "font(dejavusans)" among
 others,</li>
-<li>packagekit-gnome installs a systemwide GTK+ module to be loaded by
-all GTK+ appliations,</li>
+<li>packagekit-gnome installs a system-wide GTK+ module to be loaded by
+all GTK+ applications,</li>
 <li>The PackageKit GTK+ module overrides the default Pango fontmap such
 that when a font is requested but not found, a message is send to the
 PackageKit daemon,</li>
 <li>Upon receiving such messages, the PackageKit daemon searches the package
-databse for the requested font tag, and shows a dialog asking user for
+database for the requested font tag, and shows a dialog asking user for
 permission, and showing a list of font packages available that fulfill the
 request,</li>
 <li>When the new font is installed, running applications pick it up
@@ -697,7 +697,7 @@ cairo, and revamp gnome appearance applet to reflect this.
 dialog with internationalized font preview in GTK+, OpenOffice.org, The GIMP
 </li>
 
-<li>Desktop-wide font configuration GUI: Should supoort font grouping,
+<li>Desktop-wide font configuration GUI: Should support font grouping,
 per font rendering options, etc.  Closely related to font dialog.
 Fontmatrix may be a good start.</li>
 
