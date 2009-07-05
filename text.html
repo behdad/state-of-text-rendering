@@ -63,14 +63,14 @@ separate modules sitting on top of each other:
 
 <dl>
 
-<dt>FreeType</dt>
+<dt><a href="http://freetype.org/">FreeType</a></dt>
 <dd>
 Performs font rasterization.  Given font data (file or data in memory), it
 does simple (non-complex) mapping of Unicode characters to glyph indices and
 rendering glyphs to images.
 </dd>
 
-<dt>Fontconfig</dt>
+<dt><a href="http://fontconfig.org/">Fontconfig</a></dt>
 <dd>
 Performs font selection based on a <em>pattern</em> of desired font
 characteristics.  These characteristics typically include a family name,
@@ -80,7 +80,7 @@ Fontconfig uses FreeType to inspect fonts and caches the results in an
 mmap()able architecture-specific binary cache.
 </dd>
 
-<dt>FriBidi</dt>
+<dt><a href="http://fribidi.org/">FriBidi</a></dt>
 <dd>
 GNU FriBidi is an implementation of the
 <a href="http://www.unicode.org/reports/tr9/">Unicode
@@ -91,9 +91,9 @@ and Arabic scripts without adding support for a full complex text
 rendering engine.
 </dd>
 
-<dt>HarfBuzz</dt>
+<dt><a href="http://www.freedesktop.org/wiki/Software/HarfBuzz">HarfBuzz</a></dt>
 <dd>
-HarfBuzz is the meat in the modern GNU/Linux text rendering stack.  With
+HarfBuzz is the meat of the modern GNU/Linux text rendering stack.  With
 <a href="http://www.microsoft.com/typography/otspec/">OpenType</a>
 emerging as the universal font format supporting complex text rendering,
 HarfBuzz, as an OpenType Layout engine, is where all the magic happens.
@@ -101,7 +101,7 @@ In fact it is of such importance to the stack that it deserves an entire
 section of its own in this document.
 </dd>
 
-<dt>Pango</dt>
+<dt><a href="http://pango.org/">Pango</a></dt>
 <dd>
 Pango is, for the most part, the roof of the text rendering stack.  Components
 sitting on top of Pango (eg. GTK+) need not know about complexities of i18n
@@ -116,25 +116,14 @@ proved to be a cumbersome practice.  We will expand on that later.
 
 There are other modules that are not immediately relevant to text rendering
 but facilitate getting the text on the screen:
-
-<dl>
-
-<dt>Xrender</dt>
-<dd>
-TODO
-</dd>
-
-<dt>cairo</dt>
-<dd>
-TODO
-</dd>
-
-<dt>Xft</dt>
-<dd>
-TODO (obsolete)
-</dd>
-
-</dl>
+The X render extension provides the basic support for caching client-side
+rendered glyph shapes in the X server and showing them on the screen.
+Glyphs are rendered by the client (ie. application) and uploaded to the X
+server which will then hash and only keep one copy of each image, but each
+client has to go through the render+upload phase regardless.  There are
+various higher-leve wrappers around the text-rendering functionality of X
+render: the old and semi-obsolete one being Xft.  These days however, cairo
+does that job for the GNOME stack and Qt does it for KDE.
 
 
 <h3>HarfBuzz</h3>
@@ -177,32 +166,63 @@ and kept in house for quite a few years.  Owen Taylor developed an
 abstract buffer on top of the layout engine making it much easier to use.
 </p>
 <p>
-Around 2006 (XXX) Pango and Qt developers cooperated to reunify the layout
+Around 2006 Pango and Qt developers cooperated to reunify the layout
 engine again, and HarfBuzz was born as a freedesktop.org project.
+Initially it was just merging back the existing code and renaming it, but
+after various meetings, the plan to make HarfBuzz be a unified shaping engine
+was born and have been the goal since.  HarfBuzz was relicensed (thans to
+FreeType developers) to the old MIT license to rid it of the FTL advertisement
+clause.
 </p>
 <p>
-In 2007 (XXX) TrollTech donated the Qt shapers to HarfBuzz under the same
+In 2007 (?) TrollTech donated the Qt shapers to HarfBuzz under the same
 license as the layout engine code.  This is the current state of HarfBuzz.
 At this time Qt ships with its own copy of HarfBuzz which is identical to
 the upstream HarfBuzz.  Pango ships with its own copy also, but only uses
 the layout engine, and not the HarfBuzz shapers.
 </p>
 <p>
-TODO: relicensing? text-layout summit.  extend.
+Since 2008 the author has been working on rewriting the layout engine to
+be more robust and use mmap()ed fonts efficiently, and that work is mostly
+done now.  Next step is to design a user-friendly high-level API for the
+shaping engine and merge the Pango and Qt shapers and put them under the new
+API.  This is a work in progress by Red Hat and Mozilla.
+</p>
+<p>
+HarfBuzz is currently being used by Pango, Qt, the Linux port of Google's
+Chromium browser, as well as some smaller project.  The grand plan is for it
+to be used directly by any code needing direct access to a portable and robust
+complex shaping engine.  That would include toolkits, browsers, word
+processors, and design applications.  We will expand on that in a later
+section.
 </p>
 
 
-<h4>Other Shaping Engines</h4>
+<h4>Other Free Software Shaping Engines</h4>
 <dl>
 
-<dt>ICU</dt>
-<dd>TODO</dd>
+<dt><a href="http://icu-project.org/">ICU</a></dt>
+<dd>ICU is the Internationalization Classes for Unicode, a library developed
+by IBM with existing ports in C, C++, and Java.  It does a lot more than
+shaping, and is a huge library.  That's perhaps the main reason why it is not
+used widely for shaping.  The most notable users of ICU are the OpenOffice.org
+suite and Sun's Java implementation.  It is highly probable that ICU will be
+ported to using HarfBuzz when HarfBuzz gets to production stage.</dd>
 
-<dt>m17n</dt>
-<dd>TODO</dd>
+<dt><a href="http://www.m17n.org/index.html">m17n</a></dt>
+<dd>Mostly of academic importance, m17n is an internationalization framework
+that includes a shaping engine.  Its most notable characteristic is that it
+is based on language- and script-specific shaping rules expressed as Lisp code.
+</dd>
 
-<dt>SIL Graphite</dt>
-<dd>TODO</dd>
+<dt><a href="http://scripts.sil.org/cms/scripts/page.php?site_id=nrsi&id=RenderingGraphite">SIL Graphite</a></dt>
+<dd>SIL Graphite is a complex/smart-font technology parallel to OpenType
+Layout.  In this framework, the font itself contains all the shaping logic and
+the engine has no language- or script-specific knowledge.  This allows for
+developing fonts for minority scripts and languages without having to update
+the engine first.  For established scripts though, there is not much reason to
+prefer Graphite over OpenType.</dd>
+
 </dl>
 
 
@@ -250,17 +270,18 @@ has got a new layout engine that is completely based on cairo.  The Linux
 port subclasses PangoFcFontMap to be able to support both CSS text selection
 as well as web fonts.  By doing that it is essentially reimplementing most
 of Pango and only using the shaping logic.  It makes much more sense to use
-HarfBuzz directly, and Mozilla has expressed interest in doing that already.
-They are awaiting HarfBuzz to be "ready" though TODO.
+HarfBuzz directly, and Mozilla is now working on getting HarfBuzz ready for
+that.
 </p></li>
 <li><p>
 <strong>Webkit-GTK</strong> uses PangoCairo.  They use Pango the same way that
-Firefox 2 used to do.  At the end of the day, it's at best a hack.
+Firefox 2 used to do.  At the end of the day, it's at best a hack.  Moving
+to HarfBuzz when the time is right should fix that.
 </p></li>
 <li><p>
 <strong>Webkit/Android</strong> is the webkit engine as used by Google in
 Android and Chromium.  It uses a system called Skia for 2D graphics rendering.
-The team at Google is working on a Linux port of Chromium and is working on
+The team at Google has released an alpha Linux port of Chromium that is
 using HarfBuzz directly.
 </ul>
 </p>
