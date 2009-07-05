@@ -602,23 +602,57 @@ Information Processing, 2nd edition</a>.
 
 <h4>Indic Problem</h4>
 <p>
-<em>Indic problem</em>
-
+<em>Indic problem</em> is rooted in the fact that over a dozen of scripts used
+in India are all implemented using a single shaper driven by different
+data-tables.  This makes a lot of sense from a design point of view since the
+scripts are very similar in the way they are encoded in Unicode.  However,
+each of them does have delicate differences in how certain common characters
+interact with the others and that has made it hard to fix bugs in one script
+without breaking others.  The Indic shapers in both Pango and Qt were ported
+from the one in ICU, so this problem is common to all available free-software
+Indic shapers.  It is practically impossible to fix the tens of outstanding
+Indic bugs without first merging all the available implementation and also
+developing an exhaustive test suite.
 </p><p>
+Moreover, the Open Type Indic standard was also so complex and
+hard to implement correctly that Microsoft moved to a new Indic standard in
+Vista.  There is currently no free implementation available for the new
+standard.
 </p><p>
 <strong>ACTION:</strong>
 Merge the three Indic shapers into one as part of the HarfBuzz shaper
 merger with Pango.
+<strong>STATUS:</strong>
+Jonathan Kew of Mozilla will do this as soon as the new shaping infrastructure
+in HarfBuzz is in place.
 </p><p>
 <strong>ACTION:</strong>
 Develop an extensive Indic shaping test suite,
 as part of a larger, HarfBuzz-wide, shaping test suite.
+<strong>STATUS:</strong>
+A high priority item after the basic new shaping infrastructure in HarfBuzz is
+in place.
+</p><p>
+<strong>ACTION:</strong>
+Develop an Indic shaper for the new OpenType Indic standard.
+<br/>
+<strong>STATUS:</strong>
+Not planned currently.
 </p>
 
 <h4>Latin Problem</h4>
-<em>Latin problem</em>
-
-<p>
+<em>Latin problem</em> is not really inherent to Latin, but it refers to the
+problem that currently it is hard or impossible to use high-quality, usually
+very expensive, fonts that have many different styles.  This is not a high
+priority issue for using the desktop for day to day purposes, but is a real
+showstopper for graphic design applications as well as word processors.
+This is mostly a Pango limitation.
+</p><p>
+<strong>ACTION:</strong>
+Understand the scope of the problem and design a solution in Pango.
+<br/>
+<strong>STATUS:</strong>
+Behdad to work on the understanding part this week.
 </p>
 
 
@@ -639,8 +673,9 @@ For example, if a new font selector and dialog are designed for GTK+, we need
 to cooperate with OpenOffice.org, The GIMP, etc to make them provide users
 with the same enhanced experience.
 </p><p>
-In this section we will identify areas that need technical attention to
-advance the user experience with text rendering on the desktop:
+In this section we will identify areas that can benefit from immediate
+technical attention to advance the user experience with text rendering on the
+free desktop:
 
 <ul>
 
