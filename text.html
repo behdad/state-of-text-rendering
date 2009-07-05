@@ -659,8 +659,6 @@ Behdad to work on the understanding part this week.
 
 <h2>Road Ahead</h2>
 
-<h3>Technical Issues</h3>
-
 <p>
 Experience shows that if module X needs to use library Y, it would make for
 much better code if Y developers implement that in X and submit the patch to
@@ -675,27 +673,44 @@ with the same enhanced experience.
 </p><p>
 In this section we will identify areas that can benefit from immediate
 technical attention to advance the user experience with text rendering on the
-free desktop:
+free desktop.  We also need to start thinking about more integration issue and
+seek longer term vision for improving the text rendering experience.
 
 <ul>
 
-<li>HarfBuzz layout engine rewrite: 50% TODO</li>
+<li>HarfBuzz layout engine rewrite: 90% done.  The code currently lives in
+Pango's harfbuzz-ng branch.  Needs to be tested for portability to various
+platforms and toolchains.</li>
 
-<li>HarfBuzz shaper API redesign + merge with Pango TODO</li>
+<li>HarfBuzz shaper API redesign: Work started by Behdad and Jonathan Kew.
+Expecting drafts in August, and finalized early next year.</li>
+
+<li>Merge HarfBuzz shapers with Pango and port to new framework:
+Jonathan Kew to work on it after the API draft is out.</li>
 
 <li>Subpixel text rendering and positioning:
-cairo, pango, gnome appearance capplet TODO
+Fix subpixel issues and implement subpixel positioning API in
+cairo, and revamp gnome appearance applet to reflect this.
 </li>
 
-<li>Font selector and dialog: GTK+, OpenOffice.org, The GIMP, etc TODO</li>
-<li>Desktop-wide font configuration GUI: font grouping, per font rendering
-options, etc.  Closely related to font dialog TODO</li>
+<li>Font selector and dialog: Design a better, more usable, font chooser
+dialog with internationalized font preview in GTK+, OpenOffice.org, The GIMP
+</li>
 
-<li>Font websites: unifont.org, openfontlibrary, PackageKit, Fedora TODO</li>
+<li>Desktop-wide font configuration GUI: Should supoort font grouping,
+per font rendering options, etc.  Closely related to font dialog.
+Fontmatrix may be a good start.</li>
 
-<li>Font viewers: fontmatrix, gnome-font-viewer, gucharmap TODO</li>
+<li>Font websites: Integrate the next version of OpenFontLibrary being
+currently worked on with PackageKit and distros for a unified font discovery
+and installation.</li>
 
-<li>Application font support: Pango, librsvg, Inkscape, poppler, swfdec TODO</li>
+<li>Font viewers: Design a better font viewer.  Fontmatrix is, again, a good
+start, but may make sense to unify this with the Character Map application.
+</li>
+
+<li>Application font support in Pango, then use that feature in librsvg,
+Inkscape, poppler, swfdec, etc.</li>
 
 </ul>
 
