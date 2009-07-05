@@ -434,19 +434,40 @@ higher in the stack.  All the new features get is a mention in the release
 notes and, if lucky, a blog post.
 </p></li>
 
-<li>Text Layout Summit TODO</li>
+<li><p>
+Text Layout Summit has been a fairly successful meeting bringing all
+interested parties together since 2006 (it has been held at GNOME Boston
+Summit 2006, Akademy 2007, and Libre Graphics Meeting 2008).  However, those
+same parties do not work as closely out of the meeting.  For example, while
+Scribus and HarfBuzz developers have been discussing various issues at length
+during these meetings, there has not been a much email exchange between the
+projects over the years.
+</p></li>
 
-<li>unifont.org TODO</li>
+<li><p>
+unifont.org is a website that has many of the right aspirations for how an
+ideal font and text ecosystem should look like, but the project does not work
+with the HarfBuzz and other library designers as closely as I like to see.
+</p></li>
 
-<li>SIL Graphite TODO</li>
-
-<li>m17n TODO</li>
-
-<li>Linux Foundation Printing Summit / Working Group</li>
-
-<li>TODO other examples</li>
+<li><p>
+SIL Graphite and m17n both are reinventing the wheel in one sense.  They each
+definitely have their own justifications why a new wheel may be needed, but
+the fact remains, that their efforts does not advance the mainstream GNU/Linux
+text rendering pipeline.
+</p></li>
 
 </ul>
+</p>
+
+<p>
+One may even argue that the extremely modular design of GNU/Linux systems
+makes it painfully hard to expose a truly integrated solution, in many areas
+including text rendering.  For example, the X architecture combined with
+client-side font rendering makes it close to impossible to optimize the
+pipeline to take advantage of all the possibilities exposed by modern GPUs,
+like Microsoft does for example.  However, that excuse is irrelevant as it may
+be part of the problem statement, but it hardly is the answer.
 </p>
 
 <p>
@@ -477,11 +498,11 @@ of a polished user experience.  It remain our challenge to provide that
 experience when it becomes to i18n and text rendering.
 
 
-<h3>Customer-facing Issues</h3>
+<h3>User-facing Issues</h3>
 
 While it is easy to understand the problems identified above, it may be hard
 to justify working on fixing them from a business point of view.  However, the
-following customer-facing issues can all be tracked down to the mentioned
+following user-facing issues can all be tracked down to the mentioned
 problems:
 
 <h4>CJK Problem</h4>
