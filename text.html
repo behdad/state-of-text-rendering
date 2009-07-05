@@ -226,7 +226,7 @@ prefer Graphite over OpenType.</dd>
 </dl>
 
 
-<h2>Consumers</h2>
+<h4>Consumers</h4>
 
 <p>
 One can loosely divide the consumers of the text rendering stack based on
@@ -470,6 +470,8 @@ like Microsoft does for example.  However, that excuse is irrelevant as it may
 be part of the problem statement, but it hardly is the answer.
 </p>
 
+<h3>Recent Advances</h3>
+
 <p>
 Only recently have the Desktop Team at Red Hat and the
 Fedora Font SIG started working on features that extend across the stack
@@ -477,15 +479,65 @@ Fedora Font SIG started working on features that extend across the stack
 <ul>
 
 <li><p>
-Online font addition/removal TODO
+<strong>Online font addition/removal:</strong>
+The user-visible feature here is that when a new font is installed or an
+existing one removed, running applications pick that up automatically and in a
+matter of seconds, without needing a restart.  Implementing this feature
+involved changes way higher in desktop stack, and surprisingly, no changes in
+the text stack itself: the text stack already provided the API needed to build
+this feature on top of it for years, but it was never used.
+The changes required where in fact in GTK+ and
+gnome-settings-daemon.  The way this works is:
+<ol>
+<li>gnome-settings-daemon gets the list of all relevant font files and
+directories and uses glib/gio to monitor them for changes,</li>
+<li>Upon noticing a change, it asks fontconfig to rebuild its cache,</li>
+<li>When the new cache is ready, gnome-settings-daemon notifies all running
+application using the XSETTINGS framework,</li>
+<li>GTK+ catches the notification and asks Pango to drop all its caches,</li>
+<li>GTK+ sends the application a "theme-changed" signal such that the
+application windows are redrawned, using the new font database.</li>
+</ol>
 </p></li>
 
 <li><p>
-Automatic font installation TODO
+<strong>Automatic font installation:</strong>
+Building on top of the previous feature, this feature involves automatic
+detection of missing fonts, and installing them.  Minimal changes in the text
+stack were required.  The main changes were in RPM and PackageKit.  The way
+this works is:
+<ol>
+<li>When building packages, RPM detects fonts,</li>
+<li>For each font, RPM uses fontconfig's new fc-query tool and
+FcPatternFormat() to build a list of "Provides" tags for the list.
+For example, the Deja Vu Sans font will
+"provide" the tags "font(:lang=en)" as well as "font(dejavusans)" among
+others,</li>
+<li>packagekit-gnome installs a systemwide GTK+ module to be loaded by
+all GTK+ appliations,</li>
+<li>The PackageKit GTK+ module overrides the default Pango fontmap such
+that when a font is requested but not found, a message is send to the
+PackageKit daemon,</li>
+<li>Upon receiving such messages, the PackageKit daemon searches the package
+databse for the requested font tag, and shows a dialog asking user for
+permission, and showing a list of font packages available that fulfill the
+request,</li>
+<li>When the new font is installed, running applications pick it up
+automatically, no need to message them back.</li>
+</ol>
+
 </p></li>
 
 <li><p>
-Streamlining font packaging TODO
+<strong>Streamlining font packaging:</strong>
+The Fedora Font SIG rightfully recognized that it is actually painfully hard
+for font packagers to write the correct fontconfig configuration for their
+font packages.  Indeed, no one really knows what the correct configuration
+really is.  It also does not help that many font packagers want their font to
+be used as the default font for their language.  So, during the past year the
+SIG has been busy drafting the Fedora font packaging guidelines and getting
+them passed officially.  A major font package cleanup followed.  This is still
+a work in progress, but a step in the right direction on the distro level.
 </p></li>
 
 </ul>
@@ -498,12 +550,12 @@ of a polished user experience.  It remain our challenge to provide that
 experience when it becomes to i18n and text rendering.
 
 
-<h3>User-facing Issues</h3>
+<h3>User/Customer-facing Issues</h3>
 
-While it is easy to understand the problems identified above, it may be hard
+While it is easy to understand the problems identified, it may be hard
 to justify working on fixing them from a business point of view.  However, the
-following user-facing issues can all be tracked down to the mentioned
-problems:
+following user- and customer-facing issues can all be tracked down to the
+mentioned problems:
 
 <h4>CJK Problem</h4>
 <p>
@@ -533,19 +585,18 @@ basics of how the fonts should look on screen.  So far the burden has been
 falling on fontconfig and Fedora Font SIG maintainers to explore possible
 solutions and implement them.  But we are not there yet.
 To fix this problem, we need to go back to the design stage and re-design
-how fontconfig configuration is supposed to work.  Extensions need to be added
-to fontconfig's configuration idioms and the new idioms documented and
-implemented across all font packages.
+how fontconfig configuration is supposed to work.
+Fontconfig configuration idioms need to be extended and the new idioms
+documented and implemented across all font packages.
 </p><p>
 <strong>ACTION:</strong> Understand and document the roots of the problem,
 extend fontconfig and Pango as necessary to be able to address the problem,
 document idioms for font configuration in Fedora, and update all font packages
 to use the new guidelines.
-<strong>STATUS:</strong> Behdad ordered <a
+<br/>
+<strong>STATUS:</strong> Behdad to read <a
 href="http://www.amazon.ca/CJKV-Information-Processing-Ken-Lunde/dp/0596514476/ref=sr_1_1?ie=UTF8&s=books&qid=1239040764&sr=8-1">CJKV
 Information Processing, 2nd edition</a>.
-</p><p>
-TODO add pointers to bug and mailing list discussions.
 </p>
 
 
@@ -562,15 +613,12 @@ merger with Pango.
 <strong>ACTION:</strong>
 Develop an extensive Indic shaping test suite,
 as part of a larger, HarfBuzz-wide, shaping test suite.
-</p><p>
-TODO add pointers to bug and mailing list discussions.
 </p>
 
 <h4>Latin Problem</h4>
 <em>Latin problem</em>
 
 <p>
-TODO add pointers to bug and mailing list discussions.
 </p>
 
 
@@ -621,10 +669,10 @@ There are also issues that do not directly affect text rendering in the
 context discussed so far, but are closely relevant and require some of the
 same expertise to address:
 <ul>
-<li>Evince a11y TODO</li>
-<li>PDF improvements: pango, cairo, poppler TODO</li>
-<li>Poppler cairo backend improvements (user fonts, etc) TODO</li>
-<li>Ghostscript cairo backend TODO</li>
+<li>Evince/PDF accessibility support</li>
+<li>PDF text extraction improvements: cairo, pango, poppler</li>
+<li>Poppler cairo backend improvements (user fonts, etc)</li>
+<li>Functional Ghostscript cairo backend</li>
 </ul>
 
 <h2>Revision History</h2>
