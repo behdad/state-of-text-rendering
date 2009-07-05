@@ -288,24 +288,31 @@ using HarfBuzz directly.
 </li>
 
 <li><p>
-<strong>Word processors</strong>
-TODO
-OpenOffice.org
-AbiWord
+<strong>Word processors</strong>' biggest unique demand from a shaping engine
+is good support for and lots of control on line hyphenation and justification.
+Also important to them is choosing fonts as closely and robustly as possible
+to the font requested by the document.  Device-independent metrics as well as
+metric-compatibility with other word processors is another requirement
+(required by all kinds of office suite applications really.)
+OpenOffice.org currently uses ICU and AbiWord uses Pango.  Both will have a
+better time using HarfBuzz shaping directly.
 </p></li>
 
 <li><p>
-<strong>Designer tools</strong>
-TODO
-Inkscape
-The GIMP
-Scribus (Qt-based)
+<strong>Designer tools</strong> demand much of what word processors do, but
+also access to advanced font features (alternate glyphs, etc), being able to
+correctly handle fonts with many various (and non-standard) styles, as well as
+things like manual kerning.
+Inkscape and The GIMP use Pango currently, and Scribus is in transition to /
+has been ported to using HarfBuzz directly.
 </p></li>
 
 <li><p>
-<strong>Font designer tools</strong>
-TODO
-fontforge
+<strong>Font designer tools</strong> can use HarfBuzz directly to generate
+previews.  Other than that there is not much else to share really, even though
+they both deal with the very same objects (fonts): the font tools needs to be
+able to generate font tables, which is out of the scope of a shaping engine.
+Fontforge has the option to use Pango currently.
 </p></li>
 
 <li><p>
