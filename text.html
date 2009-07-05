@@ -1,0 +1,566 @@
+<html>
+<body>
+
+<h1>State of Text Rendering</h1>
+<p><strong>
+By <a href="http://behdad.org/">Behdad Esfahbod</a>
+&lt;behdad redhat com&gt;
+<br>
+Last updated: July 5th, 2009
+</strong></p>
+
+<h2>Introduction</h2>
+
+<p>
+Text is the primary means of communication in computers, and is bound to
+be so for the decades to come.  With the widespread adoption of
+<a href="http://www.unicode.org/">Unicode</a> as the canonical character
+set for representing text a whole new domain has been opened up in a
+desktop system software design.  Gone are the days that one would need to
+input, render, print, search, spell-check, ... one language at a time.
+The whole concept of internationalization (i18n) on which Unicode is based
+is <q>all languages, all the time</q>.
+</p>
+
+<p>
+The Free Software desktop has been rather late to the Unicode bandwagon, but
+in the past ten years all the major pieces have gathered together and nowadays,
+on a modern GNU/Linux distribution like Fedora, one cannot easily get anything
+other than Unicode working.
+</p>
+
+<p>
+Internationalization and Unicode text processing are about more than just
+rendering text on the screen.  However, in this paper we focus on the specific
+problem of text rendering, ie. from input Unicode text to pixels lit on the
+screen.  We will discuss the current architecture, identify problems that have
+limited progress in recent years, and propose actions to be taken to remedy
+them.
+</p>
+
+<p>
+While
+there are multiple text rendering stacks available in the Free Software world
+and even on a single GNU/Linux desktop, in this document we focus on the GNOME
+text rendering stack and the Fedora Project where it comes to distro-specific
+issues.  Fedora and Red Hat have been showing leadership in advancing the text
+stack for years, and other distributions have been fast adopting these new
+technology.  We expect that to remain the case for the years to come, although
+it would be nice to see other distributions / communities start contributing
+more closely to the parts of the stack we all share.
+</p>
+
+<p>
+This document is a draft working-copy paper.  It is a roadmap of where we are
+now and where we want to be, and will be updated as we get there.
+</p>
+
+
+<h2>Status Quo</h2>
+
+When we talk about the text rendering stack, we really mean a collection of
+separate modules sitting on top of each other:
+
+<dl>
+
+<dt>FreeType</dt>
+<dd>
+Performs font rasterization.  Given font data (file or data in memory), it
+does simple (non-complex) mapping of Unicode characters to glyph indices and
+rendering glyphs to images.
+</dd>
+
+<dt>Fontconfig</dt>
+<dd>
+Performs font selection based on a <em>pattern</em> of desired font
+characteristics.  These characteristics typically include a family name,
+style, weight, slant, size, as well as language.  Font configuration happens
+by way of a set of very expressive XML rules.
+Fontconfig uses FreeType to inspect fonts and caches the results in an
+mmap()able architecture-specific binary cache.
+</dd>
+
+<dt>FriBidi</dt>
+<dd>
+GNU FriBidi is an implementation of the
+<a href="http://www.unicode.org/reports/tr9/">Unicode
+Bidirectional Algorithm</a>.  Pango uses FriBidi and has an internal
+copy of it.  AbiWord is the other major user of FriBidi.  Many other
+projects use FriBidi as the simplest route to add support for Hebrew
+and Arabic scripts without adding support for a full complex text
+rendering engine.
+</dd>
+
+<dt>HarfBuzz</dt>
+<dd>
+HarfBuzz is the meat in the modern GNU/Linux text rendering stack.  With
+<a href="http://www.microsoft.com/typography/otspec/">OpenType</a>
+emerging as the universal font format supporting complex text rendering,
+HarfBuzz, as an OpenType Layout engine, is where all the magic happens.
+In fact it is of such importance to the stack that it deserves an entire
+section of its own in this document.
+</dd>
+
+<dt>Pango</dt>
+<dd>
+Pango is, for the most part, the roof of the text rendering stack.  Components
+sitting on top of Pango (eg. GTK+) need not know about complexities of i18n
+text and are expected to simply use these opaque objects called PangoLayout's.
+Pango has been designed to satisfy GTK+'s needs for i18n text.
+However, Pango still provides a low-level API on which one can build their
+own layout engine.  This is what Firefox, Webkit-GTK, etc do, but it has
+proved to be a cumbersome practice.  We will expand on that later.
+</dd>
+
+</dl>
+
+There are other modules that are not immediately relevant to text rendering
+but facilitate getting the text on the screen:
+
+<dl>
+
+<dt>Xrender</dt>
+<dd>
+TODO
+</dd>
+
+<dt>cairo</dt>
+<dd>
+TODO
+</dd>
+
+<dt>Xft</dt>
+<dd>
+TODO (obsolete)
+</dd>
+
+</dl>
+
+
+<h3>HarfBuzz</h3>
+
+<p>
+Traditionally fonts were a collection of glyphs and a simple one-to-one
+mapping between characters and glyphs.  Rudimentary support for simple
+ligatures was available in some font formats.  With Unicode however there
+was a need for formats allowing complex transformation of glyphs (substitution
+and positioning).  Two technologies were developed to achieve that, one is
+OpenType Layout from Microsoft and Adobe, the other is AAT from Apple.
+These two technologies, plus TrueType and Type1 font formats, all were
+combined in what is called OpenType.
+</p>
+<p>
+There are fundamental differences in how AAT and OpenType Layout work.
+In AAT the font contains all the logic required to perform complex text
+<em>shaping</em> (the process of converting Unicode text to glyph indices
+and positions).  Whereas in OpenType, the script-specific logic (say, Arabic
+cursive joining, etc) is part of the standard and implemented by the layout
+engine, with fonts providing only the font-specific data that the layout
+engine can use to perform complex shaping.
+</p>
+<p>
+The Free Software text stack is based on the OpenType Layout technology.
+<a href="http://www.freedesktop.org/wiki/Software/HarfBuzz">HarfBuzz</a>
+is an implementation of the OpenType Layout engine (aka layout engine)
+and the script-specific logic (aka shaping engine).
+</p>
+
+<h4>History</h4>
+
+<p>
+Originally the FreeType project implemented the OpenType Layout engine
+as part of the FreeType 2 project, however it was dropped from FreeType
+at the last moment when it was decided that OpenType shaping is not
+involved in rasterizing glyphs and hence is out of the scope of FreeType.
+The FreeType Layout (FTL) code was salvaged by Pango and Qt developers
+and kept in house for quite a few years.  Owen Taylor developed an
+abstract buffer on top of the layout engine making it much easier to use.
+</p>
+<p>
+Around 2006 (XXX) Pango and Qt developers cooperated to reunify the layout
+engine again, and HarfBuzz was born as a freedesktop.org project.
+</p>
+<p>
+In 2007 (XXX) TrollTech donated the Qt shapers to HarfBuzz under the same
+license as the layout engine code.  This is the current state of HarfBuzz.
+At this time Qt ships with its own copy of HarfBuzz which is identical to
+the upstream HarfBuzz.  Pango ships with its own copy also, but only uses
+the layout engine, and not the HarfBuzz shapers.
+</p>
+<p>
+TODO: relicensing? text-layout summit.  extend.
+</p>
+
+
+<h4>Other Shaping Engines</h4>
+<dl>
+
+<dt>ICU</dt>
+<dd>TODO</dd>
+
+<dt>m17n</dt>
+<dd>TODO</dd>
+
+<dt>SIL Graphite</dt>
+<dd>TODO</dd>
+</dl>
+
+
+<h2>Consumers</h2>
+
+<p>
+One can loosely divide the consumers of the text rendering stack based on
+their varying demands and requirements:
+</p>
+
+<ul>
+
+<li><p>
+<strong>GUI Toolkits</strong>
+like GTK+ and Qt need the least flexibility when it comes
+to text rendering.  Indeed, all the user cares about is that the text is
+rendered to the screen and is legible.  Pango has been
+specifically designed with this use case in mind.  Qt is even worse in that it
+pretty much does not support any other use case.
+Ultimately most (all?) other use cases should be made to use HarfBuzz directly,
+freeing Pango to do what it's really good at: Providing an easy-to-use API for
+GUI toolkits.
+</p></li>
+
+<li><p>
+<strong>Web browsers</strong>
+have two unique requirements that make it hard to use the native text stack
+in full:
+<ol>
+<li>They have to abide by the very strict CSS font selection rules (as opposed
+to, say, fontconfig's),</li>
+<li>They need to support <em>web fonts</em>, that is, fonts that are not
+installed on the system and are downloaded from the web on demand.</li>
+</ol>
+</p>
+
+<p>
+It is worthwhile to review what the various web browser engines currently
+use for their complex text support:
+<ul>
+<li><p>
+<strong>Firefox</strong> uses Pango.  Firefox 2 was hacked to use
+PangoLayout API. That was very abusive and inherently inefficient.  Firefox 3
+has got a new layout engine that is completely based on cairo.  The Linux
+port subclasses PangoFcFontMap to be able to support both CSS text selection
+as well as web fonts.  By doing that it is essentially reimplementing most
+of Pango and only using the shaping logic.  It makes much more sense to use
+HarfBuzz directly, and Mozilla has expressed interest in doing that already.
+They are awaiting HarfBuzz to be "ready" though TODO.
+</p></li>
+<li><p>
+<strong>Webkit-GTK</strong> uses PangoCairo.  They use Pango the same way that
+Firefox 2 used to do.  At the end of the day, it's at best a hack.
+</p></li>
+<li><p>
+<strong>Webkit/Android</strong> is the webkit engine as used by Google in
+Android and Chromium.  It uses a system called Skia for 2D graphics rendering.
+The team at Google is working on a Linux port of Chromium and is working on
+using HarfBuzz directly.
+</ul>
+</p>
+</li>
+
+<li><p>
+<strong>Word processors</strong>
+TODO
+OpenOffice.org
+AbiWord
+</p></li>
+
+<li><p>
+<strong>Designer tools</strong>
+TODO
+Inkscape
+The GIMP
+Scribus (Qt-based)
+</p></li>
+
+<li><p>
+<strong>Font designer tools</strong>
+TODO
+fontforge
+</p></li>
+
+<li><p>
+<strong>Terminal emulators</strong>
+TODO
+gnome-terminal
+Konsole
+(eg Terminal App)
+</p></li>
+
+<li><p>
+<strong>Batch document processors</strong>
+TODO
+XMLFO / Docbook processors, etc
+</p></li>
+
+<li><p>
+<strong>TeX engines</strong>
+TODO
+pdfTeX / XeTeX / PangoTeX / HBTeX
+</p></li>
+
+</ul>
+
+
+<h2>The Problem</h2>
+
+Over the past few years the Free Software text stack has made a lot of
+progress.  When one looks at each piece, technical excellence is evident.
+For example:
+<ul>
+
+<li><p>
+FreeType has the widest range of supported font formats in the world.
+</p></li>
+
+<li><p>
+Fontconfig has the most expressive font configuration language.  In fact,
+other text rendering stacks simply don't have much of a configuration
+mechanism.
+</p></li>
+
+<li><p>
+Fontconfig-based text stacks have been the first to support font fallback
+based on glyph coverage transparently.  This feature appeared in Mozilla
+around the same time (early 2000s) and only recently in Windows Vista.
+</p></li>
+
+<li><p>
+Pango has been the first text stack to support some of the minority scripts
+encoded in Unicode, even before that version of Unicode was released.
+</p></li>
+
+<li><p>
+FriBidi has been the most standard-complying implementation of the Unicode
+Bidirectional Algorithm for years.  All algorithm bugs found in
+FriBidi over the years have revealed bugs in the spec itself as well as its
+reference implementations.
+</p></li>
+
+</ul>
+</p><p>
+However, when one stands back and look at the stack as a whole, it is not
+something to envy.  As a whole, we have not been making ground-breaking
+progress for quite a while.  The last major progress was the move to
+client-side fonts itself which enabled a revolution.  Since then, it has
+mostly been bug fixing, cleanup, polish, small features here and there.
+Pretty similar to the GNOME2 status one would say.  Indeed, the client-side
+fonts were first introduced in early GNOME2.  What we need is the GNOME3 of
+text rendering, in time for GNOME3.
+</p><p>
+To those familiar with the text stack, it is hard to not see what is
+wrong.  I believe there are two problems: 1) the current stack is
+<em>good enough</em>, so improving it stays low-priority for parties involved,
+and 2) what I like to call <em>segregated efforts</em>.  By that I mean,
+for example:
+<ul>
+
+<li><p>
+Fontconfig exposes a dangerously expressive configuration language in XML,
+and from there any misconfiguration is <em>font packager</em>'s fault and not
+fontconfig's.  Even if it is painfully hard to express sane preferences using
+fontconfig rules.
+</p></li>
+
+<li><p>
+Fontconfig rightly chose XML as its configuration language, the idea
+being that font configuration GUIs can be developed to output configuration
+XML based on user preferences.  This has yet to be realized.
+</p></li>
+
+<li><p>
+Pango maintainer adds new features, making it possible to implement
+advanced features in more demanding applications like designer tools,
+but leaves it to others to actually implement such features in the tools
+higher in the stack.  All the new features get is a mention in the release
+notes and, if lucky, a blog post.
+</p></li>
+
+<li>Text Layout Summit TODO</li>
+
+<li>unifont.org TODO</li>
+
+<li>SIL Graphite TODO</li>
+
+<li>m17n TODO</li>
+
+<li>Linux Foundation Printing Summit / Working Group</li>
+
+<li>TODO other examples</li>
+
+</ul>
+</p>
+
+<p>
+Only recently have the Desktop Team at Red Hat and the
+Fedora Font SIG started working on features that extend across the stack
+(vertically or horizontally):
+<ul>
+
+<li><p>
+Online font addition/removal TODO
+</p></li>
+
+<li><p>
+Automatic font installation TODO
+</p></li>
+
+<li><p>
+Streamlining font packaging TODO
+</p></li>
+
+</ul>
+</p>
+
+Modern GNU/Linux desktops have become very complex systems.  With technologies
+like D-BUS, PolicyKit, PackageKit and others spanning across the entire
+desktop, integration becomes a much harder problem, and the secret ingredient
+of a polished user experience.  It remain our challenge to provide that
+experience when it becomes to i18n and text rendering.
+
+
+<h3>Customer-facing Issues</h3>
+
+While it is easy to understand the problems identified above, it may be hard
+to justify working on fixing them from a business point of view.  However, the
+following customer-facing issues can all be tracked down to the mentioned
+problems:
+
+<h4>CJK Problem</h4>
+<p>
+<em>CJK problem</em>
+is an artifact of the
+<em><a href="http://en.wikipedia.org/wiki/Han_unification">Unicode Han
+Unification</a></em>.  That is, the fact
+that the same Unicode character is used for all three of Traditional Chinese
+(used in mainland China), Simplified Chinese (used in Hong Kong), and
+Japanese.  The three languages, while sharing the same ideographs, require
+different visual rendering of the shared characters, making correct font
+selection critical for legible rendering of text in this family of languages.
+</p><p>
+Moreover, users of
+these languages typically have different requirements for rendering Latin than
+the rest of the world.  For example, while Indic or Arabic users prefer their
+Latin text to be rendered using the default Latin font on the system, CJK
+users want the Latin to be rendered using the same font used for CJK.  This is
+because CJK characters are very complex drawings and <strong>must</strong> be
+rendered using handcrafted bitmaps to be legible at small sizes.  Such bitmap
+glyphs simply look ugly adjacent to antialiased Latin glyphs.
+</p><p>
+Inherent to the CJK problem is also communication failure.  CJK is a huge
+and still emerging market, affecting over one billion of the world's population.
+Yet it is hard to find two native field experts that can agree on the very
+basics of how the fonts should look on screen.  So far the burden has been
+falling on fontconfig and Fedora Font SIG maintainers to explore possible
+solutions and implement them.  But we are not there yet.
+To fix this problem, we need to go back to the design stage and re-design
+how fontconfig configuration is supposed to work.  Extensions need to be added
+to fontconfig's configuration idioms and the new idioms documented and
+implemented across all font packages.
+</p><p>
+<strong>ACTION:</strong> Understand and document the roots of the problem,
+extend fontconfig and Pango as necessary to be able to address the problem,
+document idioms for font configuration in Fedora, and update all font packages
+to use the new guidelines.
+<strong>STATUS:</strong> Behdad ordered <a
+href="http://www.amazon.ca/CJKV-Information-Processing-Ken-Lunde/dp/0596514476/ref=sr_1_1?ie=UTF8&s=books&qid=1239040764&sr=8-1">CJKV
+Information Processing, 2nd edition</a>.
+</p><p>
+TODO add pointers to bug and mailing list discussions.
+</p>
+
+
+<h4>Indic Problem</h4>
+<p>
+<em>Indic problem</em>
+
+</p><p>
+</p><p>
+<strong>ACTION:</strong>
+Merge the three Indic shapers into one as part of the HarfBuzz shaper
+merger with Pango.
+</p><p>
+<strong>ACTION:</strong>
+Develop an extensive Indic shaping test suite,
+as part of a larger, HarfBuzz-wide, shaping test suite.
+</p><p>
+TODO add pointers to bug and mailing list discussions.
+</p>
+
+<h4>Latin Problem</h4>
+<em>Latin problem</em>
+
+<p>
+TODO add pointers to bug and mailing list discussions.
+</p>
+
+
+
+<h2>Road Ahead</h2>
+
+<h3>Technical Issues</h3>
+
+<p>
+Experience shows that if module X needs to use library Y, it would make for
+much better code if Y developers implement that in X and submit the patch to
+X maintainers for review, than the common practice of X developers
+implementing Y support in X based on available documentation
+(which is always incomplete anyway).
+With that in mind, we as the text stack maintainers need to reach
+out upward to applications across the desktop whenever we add new features.
+For example, if a new font selector and dialog are designed for GTK+, we need
+to cooperate with OpenOffice.org, The GIMP, etc to make them provide users
+with the same enhanced experience.
+</p><p>
+In this section we will identify areas that need technical attention to
+advance the user experience with text rendering on the desktop:
+
+<ul>
+
+<li>HarfBuzz layout engine rewrite: 50% TODO</li>
+
+<li>HarfBuzz shaper API redesign + merge with Pango TODO</li>
+
+<li>Subpixel text rendering and positioning:
+cairo, pango, gnome appearance capplet TODO
+</li>
+
+<li>Font selector and dialog: GTK+, OpenOffice.org, The GIMP, etc TODO</li>
+<li>Desktop-wide font configuration GUI: font grouping, per font rendering
+options, etc.  Closely related to font dialog TODO</li>
+
+<li>Font websites: unifont.org, openfontlibrary, PackageKit, Fedora TODO</li>
+
+<li>Font viewers: fontmatrix, gnome-font-viewer, gucharmap TODO</li>
+
+<li>Application font support: Pango, librsvg, Inkscape, poppler, swfdec TODO</li>
+
+</ul>
+
+</p><p>
+There are also issues that do not directly affect text rendering in the
+context discussed so far, but are closely relevant and require some of the
+same expertise to address:
+<ul>
+<li>Evince a11y TODO</li>
+<li>PDF improvements: pango, cairo, poppler TODO</li>
+<li>Poppler cairo backend improvements (user fonts, etc) TODO</li>
+<li>Ghostscript cairo backend TODO</li>
+</ul>
+
+<h2>Revision History</h2>
+
+<p><strong>2009-07-5:</strong> First public version as presented at the
+<a href="http://grancanariadesktopsummit.org/">Gran Canaria Desktop
+Summit</a>.</p>
+
+</body>
+</html>
