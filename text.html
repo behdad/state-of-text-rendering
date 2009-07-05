@@ -316,22 +316,35 @@ Fontforge has the option to use Pango currently.
 </p></li>
 
 <li><p>
-<strong>Terminal emulators</strong>
-TODO
-gnome-terminal
-Konsole
-(eg Terminal App)
+<strong>Terminal emulators</strong> with support for complex text are very
+weird hybrids.  On the one had terminal emulators have to lay text out in a
+predefined grid in a predefined way, which is in conflict with many aspects
+and requirements of complex text, on the other hand users demand support for
+complex text in their terminals.  It gets uglier when you think about
+bidirectional text, say, inside a console text editor.
+Nonetheless, it is fair to say that such hybrids do not put any new demands on
+the shaping engine.
+gnome-terminal currently has no support for complex text other than
+combining marks.  Konsole has bidirectional text support.  Apple's Terminal App
+has at least bidi support as well as Arabic shaping support, not sure about
+other complex text.
 </p></li>
 
 <li><p>
-<strong>Batch document processors</strong>
-TODO
-XMLFO / Docbook processors, etc
+<strong>Batch document processors</strong>  have no requirements other than
+what's required by, say, browsers or word processors.  However, so far a
+decent internationalized batch document processor has pretty much been
+nonexistent.  The reason historically has been that shaping engines were
+always developed in the context of GUI frameworks, and batch processors
+typically do not rely on one, and hence are designed without the i18n models
+present in all modens GUIs in mind.
+XMLFO / Docbook processors, etc fit in this category and should use HarfBuzz
+and the rest of the stack for full complex text support.
 </p></li>
 
 <li><p>
-<strong>TeX engines</strong>
-TODO
+<strong>TeX engines</strong> are batch document processors but worth looking
+into separately.
 pdfTeX / XeTeX / PangoTeX / HBTeX
 </p></li>
 
