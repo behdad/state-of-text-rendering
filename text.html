@@ -301,8 +301,9 @@ better time using HarfBuzz shaping directly.
 <li><p>
 <strong>Designer tools</strong> demand much of what word processors do, but
 also access to advanced font features (alternate glyphs, etc), being able to
-correctly handle fonts with many various (and non-standard) styles, as well as
-things like manual kerning.
+correctly handle fonts with many various (and non-standard) styles,
+things like manual kerning, as well using SVG fonts and embedded subsetted
+fonts.
 Inkscape and The GIMP use Pango currently, and Scribus is in transition to /
 has been ported to using HarfBuzz directly.
 </p></li>
@@ -344,8 +345,16 @@ and the rest of the stack for full complex text support.
 
 <li><p>
 <strong>TeX engines</strong> are batch document processors but worth looking
-into separately.
-pdfTeX / XeTeX / PangoTeX / HBTeX
+into separately.  Historically TeX had no shaping engines and basic shaping
+was done using macro packages and a variety of hacks.  More recently though,
+XeTeX was invented.  XeTeX simply outsources the shaping to an external
+library, ICU or Apple's ATSUI currently.  XeTeX is a separate branch of the
+TeX evolutionary hierarchy than the mainstream pdfTeX though.  The XeTeX
+creator is working on HarfBuzz on behalf of Mozilla now, and plans to port
+XeTeX to HarfBuzz eventually.  In the long term though, pdfTeX's successor
+luaTeX should be made to do the same thing.  There is more to Unicode support
+than just shaping, and in those areas the TeX engines can gain a lot by
+building on top of existing libraries.
 </p></li>
 
 </ul>
