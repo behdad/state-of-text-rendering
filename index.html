@@ -6,7 +6,7 @@
 By <a href="http://behdad.org/">Behdad Esfahbod</a>
 &lt;behdad redhat com&gt;
 <br>
-Last updated: July 5th, 2009
+Last updated: January 18, 2020
 </strong></p>
 
 <h2>Disclaimer</h2>
@@ -339,6 +339,9 @@ gnome-terminal currently has no support for complex text other than
 combining marks.  Konsole has bidirectional text support.  Apple's Terminal App
 has at least bidi support as well as Arabic shaping support, not sure about
 other complex text.
+<strong>Update (Jan 18, 2010):</strong>
+The terminal mode (term and ansi-term) in recent versions of Emacs can render
+complex text, including Indic.
 </p></li>
 
 <li><p>
@@ -434,6 +437,11 @@ fontconfig rules.
 Fontconfig rightly chose XML as its configuration language, the idea
 being that font configuration GUIs can be developed to output configuration
 XML based on user preferences.  This has yet to be realized though.
+<strong>Update (Jan 18, 2010):</strong>
+There is a small GUI project called
+<a href="http://suruma.freeflux.net/blog/archive/2009/10/14/fontik-a-font-configuration-gui.html">Fontik</a>
+that allows per-font configuration.  This is a step in the right direction
+IMO.
 </p></li>
 
 <li><p>
@@ -738,7 +746,12 @@ same expertise to address:
 
 <h2>Revision History</h2>
 
-<p><strong>2009-07-5:</strong> First public version as presented at the
+<p><strong>2009-01-18:</strong> Add note about Emacs to Terminal Emulators
+section.
+Mention <a
+href="http://suruma.freeflux.net/blog/archive/2009/10/14/fontik-a-font-configuration-gui.html">fontik</a>.</p>
+
+<p><strong>2009-07-05:</strong> First public version as presented at the
 <a href="http://grancanariadesktopsummit.org/">Gran Canaria Desktop
 Summit</a>.</p>
 
