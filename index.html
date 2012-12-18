@@ -39,16 +39,18 @@ p
 By <a href="http://behdad.org/">Behdad Esfahbod</a>
 &lt;behdad redhat com&gt;
 <br>
-Last updated: January 18, 2010
+Last major update: January 18, 2010
+Last minor update: December 18, 2012
 </strong></p>
 
 <h2>Disclaimer</h2>
 
 <p>
-The author works for Red Hat's Desktop team and has been involved with GNOME
-and Fedora for a long time.  He has been a developer and/or maintainer of many
+At the time of writing the initial version of this paper, the author was working
+for Red Hat's Desktop team and has been involved with GNOME and Fedora for a
+long time.  He has been a developer and/or maintainer of many
 modules discussed in this paper at various times, including fribidi,
-fontconfig, pango, cairo, and gnome-terminal.
+fontconfig, harfbuzz, pango, cairo, and gnome-terminal.
 </p>
 
 <h2>Introduction</h2>
@@ -426,7 +428,11 @@ mechanism.
 <li><p>
 Fontconfig-based text stacks have been the first to support font fallback
 based on glyph coverage transparently.  This feature appeared in Mozilla
-around the same time (early 2000s) and only recently in Windows Vista.
+around the same time (early 2000s) and only recently in Windows Vista as
+far as I know, though I've been pointed to <a
+href="http://msdn.microsoft.com/en-us/goglobal/bb688099?ppud=4">this</a>
+which suggests that <i>per-script</i> font fallback was supported since
+Windows 2000, but certainly not <i>per-codepoint</i>.
 </p></li>
 
 <li><p>
@@ -779,7 +785,9 @@ same expertise to address:
 
 <h2>Revision History</h2>
 
-<p><strong>2009-01-18:</strong> Add note about Emacs to Terminal Emulators
+<p><strong>2012-12-18:</strong> Add note re Windows font fallback, brought up by Pekka Pihlajasaari.</p>
+
+<p><strong>2010-10-18:</strong> Add note about Emacs to Terminal Emulators
 section.
 Mention <a
 href="http://suruma.freeflux.net/blog/archive/2009/10/14/fontik-a-font-configuration-gui.html">fontik</a>.</p>
